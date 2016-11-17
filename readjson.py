@@ -84,15 +84,16 @@ def get_row(line_contents, column_names):
                         column_name,
                         )
         if isinstance(line_value, unicode):
-            row.append('{0}'.format(line_value.encode('utf-8')).replace("\n"," "))
+            row.append('{0}'.format(line_value.encode('utf-8') \
+                .replace('\n',' ').replace('\r',' ')))
         elif line_value is not None:
-            row.append('{0}'.format(line_value).replace("\n"," "))
+            row.append('{0}'.format(line_value))
         else:
             row.append('')
     return row
 
 path = 'D:/Training/Source_Code/Python/BigData/Project/'
-json_file = path+'yelp_academic_dataset_business.json'
+json_file = path+'yelp_academic_dataset_review.json'
 csv_file = '{0}.csv'.format(json_file.split('.json')[0])
 
 column_names = get_superset_of_column_names_from_file(json_file)

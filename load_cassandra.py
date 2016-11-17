@@ -3,7 +3,8 @@ from pyspark.sql import SQLContext
 from pyspark import SparkConf
 import sys
 import pyspark_cassandra
-
+import uuid
+        
 def main(argv=None):
     if argv is None:
         inputs = sys.argv[1]
@@ -20,11 +21,13 @@ def main(argv=None):
     if table == "yelp_review":
         df = sqlContext.read.format('com.databricks.spark.csv') \
             .options(header='true').load(inputs) \
-            .select("user_id","review_id","text","votes_cool","business_id","votes_funny", \
+            .select("user_id","review_id","votes_cool","business_id","votes_funny", \
             "stars","date","votes_useful")
-        rdd = df.rdd.map(lambda line: (line[0],line[1],line[2],int(line[3]), \
-            line[4],int(line[5]),int(line[6]),line[7], int(line[8])))
-        columns = ["user_id","review_id","text","votes_cool","business_id","votes_funny", \
+        
+        rdd = df.rdd.map(lambda line: (line[0],line[1],int(line[2]), \
+            line[3],int(line[4]),int(line[5]),line[6], int(line[7])))
+        
+        columns = ["user_id","review_id","votes_cool","business_id","votes_funny", \
             "stars","date","votes_useful"]
             
     elif table == "yelp_business":
@@ -37,6 +40,12 @@ def main(argv=None):
         columns = ["business_id","name","review_count","state","full_address",\
             "open","city","latitude","longitude","stars"]
     
+    elif table == "yelp_business_checkin":
+        df = sqlContext.read.format('com.databricks.spark.csv') \
+            .options(header='true').load(inputs) \
+            .select("business_id","day","hour","checkin")
+        rdd = df.rdd.map(lambda line: (str(uuid.uuid1()), line[0],int(line[1]),int(line[2]),int(line[3])))
+        columns = ["id", "business_id","day","hour","checkin"]
     #Save result to Cassandra
     rdd.saveToCassandra(keyspace, table, columns=columns, batch_size=300, parallelism_level=1000 )          
         
